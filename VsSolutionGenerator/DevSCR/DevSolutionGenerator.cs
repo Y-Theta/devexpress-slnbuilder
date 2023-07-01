@@ -38,6 +38,8 @@ namespace VsSolutionGenerator.DevSCR
         public string OldKey { get; set; }
         public string NewKey { get; set; }
 
+        public static readonly DevSolutionGenerator Singleton = new DevSolutionGenerator();
+
         public Sln GenerateSolution(string folder,
             Dictionary<string, List<string>> addonPorjects = null,
             Dictionary<string, List<(string key, Stream value)>> inMemoryFile = null)

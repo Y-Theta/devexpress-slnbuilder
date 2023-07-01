@@ -5,13 +5,37 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:VsSolutionGenerator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        ResizeMode="NoResize"
+        Title="Devexpress 工程处理" 
+        Icon="{x:Null}"
+        Height="450" Width="800">
+    <Grid Background="#f3f3f3">
         <Grid.RowDefinitions>
-            <RowDefinition Height="24" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="24" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         
+        <Frame x:Name="Frame"/>
+        <Grid Grid.Row="1"
+              Height="24"
+              Margin="0,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="8" />
+            </Grid.ColumnDefinitions>
+
+            <!--<Button x:Name="PreBtn" 
+                    Grid.Column="1"
+                    Click="Pre"
+                    Width="72">上一步</Button>
+            <Button x:Name="NextBtn"
+                    Grid.Column="3"
+                    Click="Next"
+                    Width="72">下一步</Button>-->
+
+        </Grid>
     </Grid>
 </Window>

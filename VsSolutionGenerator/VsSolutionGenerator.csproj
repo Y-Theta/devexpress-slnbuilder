@@ -6,7 +6,20 @@
 		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<ItemGroup>
+	  <None Remove="Resources\Example1.png" />
+	  <None Remove="Resources\Example2.png" />
+	  <None Remove="Resources\SegMDL2.ttf" />
+	</ItemGroup>
+	<ItemGroup>
 	  <ProjectReference Include="..\Sln.Net\Sln.Net.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Resource Include="Resources\Example1.png" />
+	  <Resource Include="Resources\Example2.png" />
+	  <Resource Include="Resources\SegMDL2.ttf" />
 	</ItemGroup>
 
 

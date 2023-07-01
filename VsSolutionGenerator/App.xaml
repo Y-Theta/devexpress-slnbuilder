@@ -2,8 +2,77 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:VsSolutionGenerator"
+             xmlns:sys="clr-namespace:System;assembly=System.Runtime"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="Segoe">pack://application:,,,/VsSolutionGenerator;component/Resources/SegMDL2.ttf#Segoe MDL2 Assets</FontFamily>
+        <x:Static x:Key="Empty"
+                  Member="sys:String.Empty" />
+
+        <Style x:Key="PlaceHolderTextBox"
+               TargetType="TextBox">
+            <Setter Property="BorderBrush"
+                    Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+            <Setter Property="BorderThickness"
+                    Value="1" />
+            <Setter Property="Foreground"
+                    Value="{DynamicResource {x:Static SystemColors.HotTrackBrushKey}}" />
+            <Setter Property="Padding"
+                    Value="2" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border BorderThickness="{TemplateBinding BorderThickness}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <TextBlock x:Name="PlaceHolder"
+                                           Text="{TemplateBinding Tag}"
+                                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                                           Visibility="Collapsed"
+                                           VerticalAlignment="Center"
+                                           Padding="4,0,0,0"/>
+                                <ScrollViewer x:Name="PART_ContentHost"
+                                              Padding="0"
+                                              Margin="0" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="Text"
+                                     Value="{StaticResource Empty}">
+                                <Setter TargetName="PlaceHolder"
+                                        Property="Visibility"
+                                        Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HighlightTextBlock"
+               TargetType="TextBlock">
+            <Style.Triggers>
+                <EventTrigger RoutedEvent="MouseEnter">
+                    <EventTrigger.Actions>
+                        <BeginStoryboard x:Name="PART_ANI1">
+                            <Storyboard>
+                                <ColorAnimationUsingKeyFrames FillBehavior="HoldEnd"
+                                                              Storyboard.TargetProperty="Foreground.Color">
+                                    <LinearColorKeyFrame KeyTime="0:0:0.24"
+                                                         Value="#007acc" />
+                                </ColorAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger.Actions>
+                </EventTrigger>
+                <EventTrigger RoutedEvent="MouseLeave">
+                    <EventTrigger.Actions>
+                        <RemoveStoryboard BeginStoryboardName="PART_ANI1" />
+                    </EventTrigger.Actions>
+                </EventTrigger>
+            </Style.Triggers>
+        </Style>
+
     </Application.Resources>
 </Application>
