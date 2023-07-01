@@ -23,7 +23,7 @@ namespace VsSolutionGenerator.SlnGenerator.Models.Sections.Project
                 if (ProjectDependencies == null || ProjectDependencies.Count == 0)
                     return null;
 
-                return ProjectDependencies.Select(p => new GeneralSection(ParentProject.Guid.ToString("B"), p.Guid.ToString("B")));
+                return ProjectDependencies.Select(p => new GeneralSection(p.Guid.ToString("B"), p.Guid.ToString("B")));
             }
         }
 

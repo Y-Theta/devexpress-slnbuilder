@@ -12,7 +12,6 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="24" />
         </Grid.RowDefinitions>
-
-        <Grid />
+        
     </Grid>
 </Window>
