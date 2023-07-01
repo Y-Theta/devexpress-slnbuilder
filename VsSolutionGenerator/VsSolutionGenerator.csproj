@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net47</TargetFramework>
+		<LangVersion>10</LangVersion>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Sln.Net\Sln.Net.csproj" />
+	</ItemGroup>
+
+
+</Project>
