@@ -33,9 +33,11 @@ namespace VsSolutionGenerator.SlnGenerator.Models.Sections.Project
 
         public string Name { get; set; }
 
+        public string OutputName { get; set; }
+
         public string Path { get; set; }
 
-        public Guid Guid { get; } = Guid.NewGuid();
+        public Guid Guid { get; private set; } = Guid.NewGuid();
 
         public List<ProjectConfigPlatform> PlatformConfigs { get; set; }
 
@@ -46,6 +48,12 @@ namespace VsSolutionGenerator.SlnGenerator.Models.Sections.Project
             return other.DType == DType;
         }
 
+        public void SetGuid(Guid guid)
+        {
+            Guid = guid;
+        }
+
+        #region   
         public static readonly ProjectItemSectionCompare Comparer = new ProjectItemSectionCompare();
 
         public class ProjectItemSectionCompare : IEqualityComparer<ProjectItemSection>
@@ -60,5 +68,7 @@ namespace VsSolutionGenerator.SlnGenerator.Models.Sections.Project
                 return obj.Guid.GetHashCode();
             }
         }
+        #endregion
+
     }
 }

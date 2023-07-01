@@ -18,6 +18,8 @@ namespace VsSolutionGenerator.SlnGenerator
                 {
                     new GeneralSection("Debug|Any CPU", "Debug|Any CPU"),
                     new GeneralSection("Release|Any CPU", "Release|Any CPU"),
+                    new GeneralSection("Debug|x64", "Debug|x64"),
+                    new GeneralSection("Release|x64", "Release|x64"),
                 }
             };
         }

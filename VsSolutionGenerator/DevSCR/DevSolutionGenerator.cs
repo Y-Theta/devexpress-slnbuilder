@@ -13,6 +13,9 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Windows;
+using System.Windows.Input;
+using System.Windows.Controls;
+using System.Security;
 
 namespace VsSolutionGenerator.DevSCR
 {
@@ -22,29 +25,32 @@ namespace VsSolutionGenerator.DevSCR
         private readonly string _version = ".v23.1";
         private StringBuilder _console = new StringBuilder();
 
-        public Sln GenerateSolution(string folder)
+        private string[] _ignoreDirs = new string[]
+        {
+            ".vs",
+            "obj",
+            "debug",
+            "release",
+            "obj.ncd",
+            "obj.nc",
+        };
+
+        public string OldKey { get; set; }
+        public string NewKey { get; set; }
+
+        public Sln GenerateSolution(string folder,
+            Dictionary<string, List<string>> addonPorjects = null,
+            Dictionary<string, List<(string key, Stream value)>> inMemoryFile = null)
         {
             Sln sln = new Sln();
             sln.Header = VsHeaderInfoTable.VS_2022_Enterprise_17_6;
-
             Dictionary<ProjectItemSection, List<ProjectItemSection>> treeStruct = new Dictionary<ProjectItemSection, List<ProjectItemSection>>();
-            var tree = GenerateProjectTree(folder, treeStruct);
-            foreach (var item in tree)
-            {
-                sln.AddProject(item);
-            }
-
-            foreach (var proj in sln.Projects)
-            {
-                if (proj.DType == ConstTable.PROJ_TYPE_FOLDER)
-                    continue;
-                ResolveBuildOrder(folder, sln, proj);
-            }
+            GenerateProjectSection(folder, sln, treeStruct, addonPorjects, inMemoryFile);
 
             sln.Global = new GlobalItemSection();
             var solutionConfigs = SlnSectionDefaultGenerator.GenerateDefaultSolutionConfigPlatform();
             sln.Global.GlobalSections.Add(solutionConfigs);
-            sln.Global.GlobalSections.Add(SlnSectionDefaultGenerator.GenerateDefaultProjectConfigurationPlatformSection(sln.Projects, solutionConfigs.Configs));
+            //sln.Global.GlobalSections.Add(SlnSectionDefaultGenerator.GenerateDefaultProjectConfigurationPlatformSection(sln.Projects, solutionConfigs.Configs));
             sln.Global.GlobalSections.Add(SlnSectionDefaultGenerator.GenerateDefaultSolutionPropertySection());
             var nestedProjs = new NestedProjectSection();
             nestedProjs.ProjectMap = treeStruct;
@@ -52,6 +58,103 @@ namespace VsSolutionGenerator.DevSCR
             sln.Global.GlobalSections.Add(SlnSectionDefaultGenerator.GenerateDefaultExtensibilityGlobalSection());
 
             return sln;
+        }
+
+        /// <summary>
+        /// 生成 解决方案的工程项
+        /// </summary>
+        private void GenerateProjectSection(string folder,
+            Sln sln,
+            Dictionary<ProjectItemSection, List<ProjectItemSection>> treeStruct,
+            Dictionary<string, List<string>> addonPorjects = null,
+            Dictionary<string, List<(string key, Stream value)>> inMemoryFile = null)
+        {
+            Dictionary<string, List<string>> projRefs = new Dictionary<string, List<string>>();
+            var tree = GenerateProjectTree(folder, treeStruct);
+            foreach (var item in tree)
+            {
+                if (item.DType != ConstTable.PROJ_TYPE_FOLDER)
+                {
+                    var kv = MatchDllReference(File.ReadAllText(Path.Combine(folder, item.Path)));
+                    if (kv.guid != null)
+                    {
+                        item.SetGuid(new Guid(kv.guid));
+                    }
+                    item.OutputName = item.Name;
+                    if (!string.IsNullOrEmpty(kv.asbName))
+                    {
+                        item.OutputName = kv.asbName;
+                    }
+                    projRefs[item.Guid.ToString("B")] = kv.refs;
+                }
+                sln.AddProject(item);
+            }
+
+            if (addonPorjects != null)
+            {
+                foreach (var proj in addonPorjects)
+                {
+                    ProjectItemSection folderSection = null;
+                    if (proj.Key != string.Empty)
+                    {
+                        folderSection = new ProjectItemSection();
+                        folderSection.DType = ConstTable.PROJ_TYPE_FOLDER;
+                        folderSection.Name = $"{proj.Key}";
+                        folderSection.Path = folderSection.Name;
+                    }
+
+                    List<ProjectItemSection> subProjs = new List<ProjectItemSection>();
+                    if (proj.Value != null && proj.Value.Count > 0)
+                    {
+                        foreach (var item in proj.Value)
+                        {
+                            var projPath = Path.Combine(folder, item);
+                            if (!File.Exists(projPath))
+                            {
+                                continue;
+                            }
+                            ProjectItemSection project = new ProjectItemSection();
+                            FileInfo info = new FileInfo(projPath);
+                            OverridePublicKey(info.DirectoryName);
+                            var kv = MatchDllReference(File.ReadAllText(projPath));
+                            if (kv.guid != null)
+                            {
+                                project.SetGuid(new Guid(kv.guid));
+                            }
+                            project.Name = info.Name.Replace(info.Extension, "");
+                            project.DType = ConstTable.PROJ_TYPE_C_SHARP;
+                            project.Path = item;
+                            project.OutputName = project.Name;
+                            if (!string.IsNullOrEmpty(kv.asbName))
+                            {
+                                project.OutputName = kv.asbName;
+                            }
+                            projRefs[project.Guid.ToString("B")] = kv.refs;
+                            subProjs.Add(project);
+                            sln.AddProject(project);
+                        }
+                    }
+
+                    if (folderSection != null && subProjs.Count > 0)
+                    {
+                        sln.AddProject(folderSection);
+                        treeStruct[folderSection] = subProjs;
+                    }
+                }
+            }
+
+            foreach (var proj in sln.Projects)
+            {
+                if (proj.DType == ConstTable.PROJ_TYPE_FOLDER)
+                    continue;
+                var guidb = proj.Guid.ToString("B");
+                if (projRefs.ContainsKey(guidb))
+                {
+                    ResolveBuildOrder(sln, proj, projRefs[guidb]);
+                    continue;
+                }
+                ResolveBuildOrder(sln, proj, null);
+            }
         }
 
         private List<ProjectItemSection> GenerateProjectTree(string folder, Dictionary<ProjectItemSection, List<ProjectItemSection>> tree, string relativePath = null)
@@ -62,7 +165,7 @@ namespace VsSolutionGenerator.DevSCR
             foreach (var element in entries)
             {
                 //dir
-                if (Directory.Exists(element) && !lastLevel)
+                if (Directory.Exists(element) && !_ignoreDirs.Contains(element.Split(Path.DirectorySeparatorChar).Last().ToLower()) && !lastLevel) 
                 {
                     ProjectItemSection folderSection = new ProjectItemSection();
                     folderSection.DType = ConstTable.PROJ_TYPE_FOLDER;
@@ -85,7 +188,7 @@ namespace VsSolutionGenerator.DevSCR
                     }
                     sections.AddRange(subSections);
                 }
-                else if (File.Exists(element) && element.EndsWith(_ext) && element.Contains("NetCore"))
+                else if (File.Exists(element) && element.EndsWith(_ext) && element.ToLower().Contains("netcore"))
                 {
                     FileInfo info = new FileInfo(element);
                     ProjectItemSection project = new ProjectItemSection();
@@ -106,21 +209,19 @@ namespace VsSolutionGenerator.DevSCR
         /// <summary>
         /// 
         /// </summary>
-        private void ResolveBuildOrder(string pathRoot,
+        private void ResolveBuildOrder(
             Sln sln,
-            ProjectItemSection projectItem)
+            ProjectItemSection projectItem,
+            List<string> dllrefs)
         {
-            var path = Path.Combine(pathRoot, projectItem.Path);
-            var file = File.ReadAllText(path);
-            var dllrefs = MatchDllReference(file);
-            if (dllrefs.Count == 0)
+            if (dllrefs == null)
                 return;
 
             List<ProjectItemSection> items = new List<ProjectItemSection>();
             foreach (var refer in dllrefs)
             {
-                var name = refer.Replace(_version, "");
-                var dependence = sln.Projects.FirstOrDefault(p => p.Name.Replace(".NetCore", "") == name);
+                var name = refer;
+                var dependence = sln.Projects.FirstOrDefault(p => p.OutputName == name);
                 if (dependence != null)
                 {
                     items.Add(dependence);
@@ -135,7 +236,10 @@ namespace VsSolutionGenerator.DevSCR
             }
         }
 
-        private List<string> MatchDllReference(string projectContent)
+        /// <summary>
+        /// 从项目 引用里解析 生成顺序
+        /// </summary>
+        private (List<string> refs, string guid, string asbName) MatchDllReference(string projectContent)
         {
             var xmlReader = new XmlTextReader(new StringReader(projectContent));
             xmlReader.Namespaces = false;
@@ -152,7 +256,49 @@ namespace VsSolutionGenerator.DevSCR
                 }
             }
 
-            return projReference;
+            string guid = null;
+            var guids = c.XPathSelectElements(@"//PropertyGroup/ProjectGuid");
+            if (guids.Any())
+            {
+                var projguid = guids.First();
+                guid = projguid.Value;
+            }
+
+            string assemblyName = null;
+            var asbNames = c.XPathSelectElements(@"//PropertyGroup/AssemblyName");
+            if (asbNames.Any())
+            {
+                var asb = asbNames.First();
+                assemblyName = asb.Value;
+            }
+
+            return (projReference, guid, assemblyName);
+        }
+
+
+        public void OverridePublicKey(string dir)
+        {
+            OverridePublicKey(dir, OldKey, NewKey);
+        }
+
+        /// <summary>
+        /// 更新 internalvisibleto 的 publickkey
+        /// </summary>
+        public void OverridePublicKey(string dir, string key, string newkey)
+        {
+            var files = Directory.GetFiles(dir, "AssemblyInfo.cs", SearchOption.AllDirectories);
+            files.AsParallel().ForAll(entry =>
+            {
+                if (File.Exists(entry) && (entry.EndsWith(@"AssemblyInfo.cs") || entry.EndsWith("AssemblyVersion.cs")))
+                {
+                    var content = File.ReadAllText(entry);
+                    if (content.Contains(key))
+                    {
+                        content = content.Replace(key, newkey);
+                        File.WriteAllText(entry, content);
+                    }
+                }
+            });
         }
     }
 }

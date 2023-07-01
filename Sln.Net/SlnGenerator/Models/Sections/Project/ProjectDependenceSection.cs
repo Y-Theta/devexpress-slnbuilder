@@ -23,12 +23,23 @@ namespace VsSolutionGenerator.SlnGenerator.Models.Sections.Project
                 if (ProjectDependencies == null || ProjectDependencies.Count == 0)
                     return null;
 
-                return ProjectDependencies.Select(p => new GeneralSection(p.Guid.ToString("B"), p.Guid.ToString("B")));
+                return _dependences;
             }
         }
 
         public ProjectItemSection ParentProject => Parent as ProjectItemSection;
 
-        public List<ProjectItemSection> ProjectDependencies { get; set; }
+        private IEnumerable<GeneralSection> _dependences;
+        private List<ProjectItemSection> _projDependence;
+
+        public List<ProjectItemSection> ProjectDependencies
+        {
+            get => _projDependence;
+            set
+            {
+                _projDependence = value;
+                _dependences = ProjectDependencies.Select(p => new GeneralSection(p.Guid.ToString("B"), p.Guid.ToString("B"))).ToList();
+            }
+        }
     }
 }
