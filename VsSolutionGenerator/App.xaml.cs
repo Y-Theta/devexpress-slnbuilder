@@ -28,7 +28,6 @@ namespace VsSolutionGenerator
 
         protected override void OnStartup(StartupEventArgs e)
         {
-            //DevSolutionGenerator resolver = new DevSolutionGenerator();
             //resolver.OldKey = "0024000004800000940000000602000000240000525341310004000001000100dfcd8cadc2dd24a7cd4ce95c4a9c1b8e7cb1dc2d665120556b4b0ec35495fddb2bd6eed0ca1e56480276295a225ba2a9746f3d3e1a04547ccf5b26acc3f96eb2a13ac467512497aa79208e32f242fd0618014d53c95a36e5de0e891873841fa8f559566e38e968426488b4aa4d0f0b59e59f38dcf3fbccf25d990ab19c27ddc2";
             //resolver.NewKey = "002400000480000094000000060200000024000052534131000400000100010079f66415bde7deb6b08f5f4f28d495cb2fef22d8ead0caa23355ba7e7cac85fb92f8eff4a8e4069ca592db888e470e844be616a04e94fb136f5e0baaf0df46d4a52c2d59662fd5ee7f275f9d80aba619a984fcca2651acefc63f3093904072d3ab1815c043b0449dd5a785ca58bc27820c3ac5b1a3a25ecf4b113c900be97bba";
             //var sln = resolver.GenerateSolution(@"F:\Devexpress\23.1\Sources\Win", new Dictionary<string, List<string>>
@@ -52,7 +51,6 @@ namespace VsSolutionGenerator
             //    slnw.Flush();
             //    stream.Position = 0;
             //}
-            _ = DevSolutionGenerator.Singleton;
             base.OnStartup(e);
         }
 

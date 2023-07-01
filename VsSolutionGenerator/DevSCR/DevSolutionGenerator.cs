@@ -159,6 +159,57 @@ namespace VsSolutionGenerator.DevSCR
             }
         }
 
+        public ISet<string> CheckSolutionNotFoundReferences(string folder)
+        {
+            Sln sln = new Sln();
+            Dictionary<string, List<string>> projRefs = new Dictionary<string, List<string>>();
+            Dictionary<ProjectItemSection, List<ProjectItemSection>> treeStruct = 
+                new Dictionary<ProjectItemSection, List<ProjectItemSection>>();
+            HashSet<string> notFoundedRefs = new HashSet<string>();
+            var tree = GenerateProjectTree(folder, treeStruct);
+            foreach (var item in tree)
+            {
+                if (item.DType != ConstTable.PROJ_TYPE_FOLDER)
+                {
+                    var kv = MatchDllReference(File.ReadAllText(Path.Combine(folder, item.Path)));
+                    if (kv.guid != null)
+                    {
+                        item.SetGuid(new Guid(kv.guid));
+                    }
+                    item.OutputName = item.Name;
+                    if (!string.IsNullOrEmpty(kv.asbName))
+                    {
+                        item.OutputName = kv.asbName;
+                    }
+                    projRefs[item.Guid.ToString("B")] = kv.refs;
+                }
+                sln.AddProject(item);
+            }
+
+            foreach (var proj in sln.Projects)
+            {
+                if (proj.DType == ConstTable.PROJ_TYPE_FOLDER)
+                    continue;
+                var guidb = proj.Guid.ToString("B");
+                if (projRefs.ContainsKey(guidb))
+                {
+                    var items = ResolveBuildOrder(sln, proj, projRefs[guidb]);
+                    if (items != null && items.Count > 0)
+                    {
+                        items.ForEach(p => notFoundedRefs.Add(p));
+                    }
+                    continue;
+                }
+                var refs = ResolveBuildOrder(sln, proj, null);
+                if (refs != null && refs.Count > 0)
+                {
+                    refs.ForEach(p => notFoundedRefs.Add(p));
+                }
+            }
+
+            return notFoundedRefs;
+        }
+
         private List<ProjectItemSection> GenerateProjectTree(string folder, Dictionary<ProjectItemSection, List<ProjectItemSection>> tree, string relativePath = null)
         {
             List<ProjectItemSection> sections = new List<ProjectItemSection>();
@@ -211,14 +262,15 @@ namespace VsSolutionGenerator.DevSCR
         /// <summary>
         /// 
         /// </summary>
-        private void ResolveBuildOrder(
+        private List<string> ResolveBuildOrder(
             Sln sln,
             ProjectItemSection projectItem,
             List<string> dllrefs)
         {
             if (dllrefs == null)
-                return;
+                return null;
 
+            List<string> notFound = new List<string>();
             List<ProjectItemSection> items = new List<ProjectItemSection>();
             foreach (var refer in dllrefs)
             {
@@ -228,6 +280,10 @@ namespace VsSolutionGenerator.DevSCR
                 {
                     items.Add(dependence);
                 }
+                else
+                {
+                    notFound.Add(refer);
+                }
             }
 
             if (items.Count > 0)
@@ -236,6 +292,8 @@ namespace VsSolutionGenerator.DevSCR
                 dep.ProjectDependencies = items;
                 projectItem.ProjectSections.Add(dep);
             }
+
+            return notFound;
         }
 
         /// <summary>

@@ -17,6 +17,8 @@
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
@@ -132,6 +134,59 @@
                      Style="{StaticResource PlaceHolderTextBox}"
                      Tag="生成的工程文件的名称" />
         </Grid>
-
+        <Grid Height="24"
+              Grid.Row="6"
+              Margin="2,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="auto" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Margin="0,0,8,0"
+                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                       Text="检测工程的完备性" />
+            <TextBlock Grid.Column="1"
+                       Text="&#xF167;"
+                       FontSize="15.6"
+                       Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                       Style="{StaticResource HighlightTextBlock}"
+                       FontFamily="{StaticResource Segoe}">
+                <TextBlock.ToolTip>
+                    <ToolTip>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="auto" />
+                                <RowDefinition Height="auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Margin="0,2,0,4"
+                                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                                       Text="检测解决方案中所有项目的程序集引用是否仅来自解决方案中的项目&#x0D;只有成功时才能顺利生成" />
+                            <Image Grid.Row="1"
+                                   Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example3.png" />
+                        </Grid>
+                    </ToolTip>
+                </TextBlock.ToolTip>
+            </TextBlock>
+        </Grid>
+        <Grid Grid.Row="7"
+              Margin="4,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="CheckOutput"
+                     Style="{StaticResource PlaceHolderTextBox}"
+                     IsReadOnly="True"
+                     IsReadOnlyCaretVisible="False"
+                     Height="72" />
+            <TextBlock Grid.Column="1" 
+                       Style="{StaticResource HighlightTextBlock}"
+                       Margin="12,0,8,0"
+                       FontSize="16"
+                       FontFamily="{StaticResource Segoe}"
+                       VerticalAlignment="Center"
+                       PreviewMouseLeftButtonDown="Project_Check"
+                       Text="&#xE895;"
+                       ToolTip="检查项目"/>
+        </Grid>
     </Grid>
 </Page>

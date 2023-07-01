@@ -8,6 +8,7 @@
 	<ItemGroup>
 	  <None Remove="Resources\Example1.png" />
 	  <None Remove="Resources\Example2.png" />
+	  <None Remove="Resources\Example3.png" />
 	  <None Remove="Resources\SegMDL2.ttf" />
 	</ItemGroup>
 	<ItemGroup>
@@ -19,6 +20,7 @@
 	<ItemGroup>
 	  <Resource Include="Resources\Example1.png" />
 	  <Resource Include="Resources\Example2.png" />
+	  <Resource Include="Resources\Example3.png" />
 	  <Resource Include="Resources\SegMDL2.ttf" />
 	</ItemGroup>
 
