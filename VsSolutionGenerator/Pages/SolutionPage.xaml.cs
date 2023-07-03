@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,6 +16,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VsSolutionGenerator.DevSCR;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace VsSolutionGenerator.Pages
 {
@@ -23,9 +25,19 @@ namespace VsSolutionGenerator.Pages
     /// </summary>
     public partial class SolutionPage : Page
     {
+
+        private ObservableCollection<FolderItem> _folderStruct = new ObservableCollection<FolderItem>();
+
         public SolutionPage()
         {
             InitializeComponent();
+            Loaded += SolutionPage_Loaded;
+        }
+
+        private void SolutionPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            _folderStruct = new ObservableCollection<FolderItem>();
+            PART_ADDITION_TREE.ItemsSource = _folderStruct;
         }
 
         private void TextBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -60,6 +72,61 @@ namespace VsSolutionGenerator.Pages
                 sb.Append("当前工程中所有项目引用可闭包！");
             }
             CheckOutput.Text = sb.ToString();
+        }
+
+        private void ProjItemDelete(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock tb)
+            {
+                if (tb.DataContext is FolderItem tree)
+                {
+                    if (tree.Parent != null)
+                    {
+                        tree.Parent.SubEntries.Remove(tree);
+                    }
+                    else
+                    {
+                        _folderStruct.Remove(tree);
+                    }
+                }
+            }
+        }
+
+        private void ExtraProjItemAdd(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBlock tb)
+            {
+                if(tb.DataContext is FolderItem tree)
+                {
+                    var item = new FolderItem { Name = "", Parent = tree };
+                    tree.SubEntries.Add(item);
+                    item.IsFolder = false;
+                }
+            }
+        }
+
+        private void AddProjFolder(object sender, MouseButtonEventArgs e)
+        {
+            _folderStruct.Add(new FolderItem { IsFolder = true });
+        }
+
+        private void SelectItemProj(object sender, MouseButtonEventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                if (tb.DataContext is FolderItem tree)
+                {
+                    using (OpenFileDialog dialog = new OpenFileDialog())
+                    {
+                        dialog.InitialDirectory = Folder.Text;
+                        if (dialog.ShowDialog() == DialogResult.OK)
+                        {
+                            tree.Path = dialog.FileName;
+                            tree.Name = tree.Path.Split(System.IO.Path.DirectorySeparatorChar).Last();
+                        }
+                    }
+                }
+            }
         }
     }
 }

@@ -42,7 +42,6 @@ namespace VsSolutionGenerator.SlnGenerator
             return projConfigs;
         }
 
-
         public static SolutionPropertySection GenerateDefaultSolutionPropertySection()
         {
             SolutionPropertySection projConfigs = new SolutionPropertySection();

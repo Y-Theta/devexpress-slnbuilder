@@ -5,112 +5,347 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:VsSolutionGenerator.Pages"
       xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+      xmlns:model="clr-namespace:VsSolutionGenerator.DevSCR"
       mc:Ignorable="d"
       d:DesignHeight="450"
       d:DesignWidth="800"
       Title="SolutionPage">
-    <Grid Margin="8,4">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="auto" />
-        </Grid.RowDefinitions>
-        <Grid Height="24"
-              Margin="2,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Margin="0,0,8,0"
-                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Text="设置 旧的签名 与 新的签名 的 PublicKey" />
-            <TextBlock Grid.Column="1"
-                       Text="&#xF167;"
-                       FontSize="15.6"
-                       Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Style="{StaticResource HighlightTextBlock}"
-                       FontFamily="{StaticResource Segoe}">
-                <TextBlock.ToolTip>
-                    <ToolTip>
-                        <Grid >
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                            </Grid.RowDefinitions>
-                            <TextBlock Margin="0,2,0,4" 
-                                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                                       Text="从任意Dev源码中的 AssemblyInfo.cs 中 找到定义为 assembly: InternalsVisibleTo 的特性，并获取其 PublickKey 的值" />
-                            <Image Grid.Row="1" 
-                                   Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example2.png" />
+    <Page.Resources>
+
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.Static.Stroke"
+                         Color="Transparent" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.Static.Fill"
+                         Color="Black" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.MouseOver.Stroke"
+                         Color="Transparent" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.MouseOver.Fill"
+                         Color="Black" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.Static.Checked.Stroke"
+                         Color="Transparent" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.Static.Checked.Fill"
+                         Color="Black" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.MouseOver.Checked.Stroke"
+                         Color="Transparent" />
+        <SolidColorBrush x:Key="TreeViewItem.TreeArrow.MouseOver.Checked.Fill"
+                         Color="Black" />
+        <PathGeometry x:Key="TreeArrow"
+                      Figures="M0,0 L0,6 L6,0 z" />
+        <Style x:Key="ExpandCollapseToggleStyle"
+               TargetType="{x:Type ToggleButton}">
+            <Setter Property="Focusable"
+                    Value="False" />
+            <Setter Property="Width"
+                    Value="16" />
+            <Setter Property="Height"
+                    Value="16" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type ToggleButton}">
+                        <Border Background="Transparent"
+                                Height="16"
+                                Padding="5,5,5,5"
+                                Width="16">
+                            <Path x:Name="ExpandPath"
+                                  Data="{StaticResource TreeArrow}"
+                                  Fill="{StaticResource TreeViewItem.TreeArrow.Static.Fill}"
+                                  Stroke="{StaticResource TreeViewItem.TreeArrow.Static.Stroke}">
+                                <Path.RenderTransform>
+                                    <RotateTransform Angle="135"
+                                                     CenterY="3"
+                                                     CenterX="3" />
+                                </Path.RenderTransform>
+                            </Path>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked"
+                                     Value="True">
+                                <Setter Property="RenderTransform"
+                                        TargetName="ExpandPath">
+                                    <Setter.Value>
+                                        <RotateTransform Angle="180"
+                                                         CenterY="3"
+                                                         CenterX="3" />
+                                    </Setter.Value>
+                                </Setter>
+                                <Setter Property="Fill"
+                                        TargetName="ExpandPath"
+                                        Value="{StaticResource TreeViewItem.TreeArrow.Static.Checked.Fill}" />
+                                <Setter Property="Stroke"
+                                        TargetName="ExpandPath"
+                                        Value="{StaticResource TreeViewItem.TreeArrow.Static.Checked.Stroke}" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver"
+                                     Value="True">
+                                <Setter Property="Stroke"
+                                        TargetName="ExpandPath"
+                                        Value="{StaticResource TreeViewItem.TreeArrow.MouseOver.Stroke}" />
+                                <Setter Property="Fill"
+                                        TargetName="ExpandPath"
+                                        Value="{StaticResource TreeViewItem.TreeArrow.MouseOver.Fill}" />
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsMouseOver"
+                                               Value="True" />
+                                    <Condition Property="IsChecked"
+                                               Value="True" />
+                                </MultiTrigger.Conditions>
+                                <Setter Property="Stroke"
+                                        TargetName="ExpandPath"
+                                        Value="{StaticResource TreeViewItem.TreeArrow.MouseOver.Checked.Stroke}" />
+                                <Setter Property="Fill"
+                                        TargetName="ExpandPath"
+                                        Value="{StaticResource TreeViewItem.TreeArrow.MouseOver.Checked.Fill}" />
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="TreeViewItemFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <sys:String x:Key="ToolTip">双击添加项目文件 (.csproj)|请填写名称</sys:String>
+        <Style x:Key="EditableTreelist"
+               TargetType="TreeView">
+            <Setter Property="Background"
+                    Value="{x:Null}" />
+            <Setter Property="BorderBrush"
+                    Value="{StaticResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+            <Setter Property="HorizontalContentAlignment"
+                    Value="Stretch" />
+            <Setter Property="ItemContainerStyle">
+                <Setter.Value>
+                    <Style TargetType="TreeViewItem">
+                        <Setter Property="HorizontalContentAlignment"
+                                Value="Stretch" />
+                        <Setter Property="SnapsToDevicePixels"
+                                Value="True" />
+                        <Setter Property="UseLayoutRounding"
+                                Value="True" />
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type TreeViewItem}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"
+                                                              MinWidth="20" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition />
+                                        </Grid.RowDefinitions>
+                                        <ToggleButton x:Name="Expander"
+                                                      ClickMode="Press"
+                                                      MinWidth="20"
+                                                      IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource Mode=TemplatedParent}}"
+                                                      Style="{StaticResource ExpandCollapseToggleStyle}" />
+                                        <Border x:Name="Bd"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                Grid.Column="1"
+                                                Grid.ColumnSpan="2"
+                                                Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="true">
+                                            <ContentPresenter x:Name="PART_Header"
+                                                              ContentSource="Header"
+                                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                        </Border>
+                                        <ItemsPresenter x:Name="ItemsHost"
+                                                        Grid.Column="1"
+                                                        Grid.ColumnSpan="4"
+                                                        Grid.Row="1" />
+                                        <TextBlock x:Name="PART_ADD_BTN" 
+                                                   Grid.Column="3"
+                                                   FontFamily="{StaticResource Segoe}"
+                                                   Text="&#xE710;"
+                                                   Width="24"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   FontSize="14.5"
+                                                   Style="{StaticResource HighlightTextBlock}"
+                                                   ToolTip="添加子项目"
+                                                   Foreground="Green"
+                                                   Margin="4,0,0,0"
+                                                   MouseDown="ExtraProjItemAdd"/>
+                                        <TextBlock Grid.Column="4"
+                                                   FontFamily="{StaticResource Segoe}"
+                                                   Text="&#xE711;"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   FontSize="15.6"
+                                                   Style="{StaticResource HighlightTextBlock}"
+                                                   ToolTip="删除项目"
+                                                   Foreground="Red"
+                                                   Margin="4,0,0,0"
+                                                   Width="24"
+                                                   MouseDown="ProjItemDelete"/>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsExpanded"
+                                                 Value="false">
+                                            <Setter Property="Visibility"
+                                                    TargetName="ItemsHost"
+                                                    Value="Collapsed" />
+                                        </Trigger>
+                                        <Trigger Property="HasItems"
+                                                 Value="False">
+                                            <Setter Property="Visibility"
+                                                    TargetName="Expander"
+                                                    Value="Collapsed" />
+                                        </Trigger>
+                                        <DataTrigger Value="True">
+                                            <DataTrigger.Binding>
+                                                <Binding Path="DataContext.IsLeaf" RelativeSource="{RelativeSource Mode=Self}"/>
+                                            </DataTrigger.Binding>
+                                            <Setter Property="Visibility"
+                                                    TargetName="PART_ADD_BTN"
+                                                    Value="Collapsed" />
+                                        </DataTrigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <HierarchicalDataTemplate DataType="{x:Type model:FolderItem}"
+                                              ItemsSource="{Binding SubEntries}">
+                        <Grid>
+                            <TextBox x:Name="PART_NAME"
+                                     Text="{Binding Name}"
+                                     IsReadOnly="{Binding IsLeaf}"
+                                     BorderThickness="0,0,0,1"
+                                     Tag="{Binding IsLeaf,Converter={x:Static model:TooltipConvert.Singleton},ConverterParameter={StaticResource ToolTip}}"
+                                     Style="{StaticResource PlaceHolderTextBox}"
+                                     HorizontalAlignment="Stretch"
+                                     MouseDoubleClick="SelectItemProj"/>
                         </Grid>
-                    </ToolTip>
-                </TextBlock.ToolTip>
-            </TextBlock>
-        </Grid>
-        <Grid Grid.Row="1"
-              Margin="4,0,0,0">
+                    </HierarchicalDataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+    </Page.Resources>
+    <ScrollViewer Background="{x:Null}">
+        <Grid Margin="8,4">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto" />
                 <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
-
-            <TextBox x:Name="OldPubKey" 
-                     Height="24"
-                     Margin="0,0,0,12"
-                     Style="{StaticResource PlaceHolderTextBox}"
-                     Tag="输入 DevExpress 中的 PublicKey "/>
-            <TextBox x:Name="NewPubKey"
-                     Grid.Row="1"
-                     Height="24"
-                     Style="{StaticResource PlaceHolderTextBox}"
-                     Tag="输入新的 签名文件的 PublicKey"/>
-        </Grid>
-        <Grid Height="24"
-              Grid.Row="2"
-              Margin="2,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Margin="0,0,8,0"
-                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Text="选择 DevExpress 项目源文件夹 ( Win / WPF / WinUI )" />
-            <TextBlock Grid.Column="1" 
-                       Text="&#xF167;"
-                       FontSize="15.6"
-                       Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Style="{StaticResource HighlightTextBlock}"
-                       FontFamily="{StaticResource Segoe}">
-                <TextBlock.ToolTip>
-                    <ToolTip>
-                        <Image Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example1.png" />
-                    </ToolTip>
-                </TextBlock.ToolTip>
+            <Grid Height="24"
+                  Margin="2,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Margin="0,0,8,0"
+                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Text="设置 旧的签名 与 新的签名 的 PublicKey" />
+                <TextBlock Grid.Column="1"
+                           Text="&#xF167;"
+                           FontSize="15.6"
+                           Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Style="{StaticResource HighlightTextBlock}"
+                           FontFamily="{StaticResource Segoe}">
+                    <TextBlock.ToolTip>
+                        <ToolTip>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Margin="0,2,0,4"
+                                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                                           Text="从任意Dev源码中的 AssemblyInfo.cs 中 找到定义为 assembly: InternalsVisibleTo 的特性，并获取其 PublickKey 的值" />
+                                <Image Grid.Row="1"
+                                       Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example2.png" />
+                            </Grid>
+                        </ToolTip>
+                    </TextBlock.ToolTip>
             </TextBlock>
-        </Grid>
-        <Grid Grid.Row="3"
-              Height="24"
-              Margin="4,0,0,0">
-            <!--<Grid.ColumnDefinitions>
+            </Grid>
+            <Grid Grid.Row="1"
+                  Margin="4,0,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" />
+                </Grid.RowDefinitions>
+
+                <TextBox x:Name="OldPubKey"
+                         Height="24"
+                         Margin="0,0,0,12"
+                         Style="{StaticResource PlaceHolderTextBox}"
+                         Tag="输入 DevExpress 中的 PublicKey " />
+                <TextBox x:Name="NewPubKey"
+                         Grid.Row="1"
+                         Height="24"
+                         Style="{StaticResource PlaceHolderTextBox}"
+                         Tag="输入新的 签名文件的 PublicKey" />
+            </Grid>
+            <Grid Height="24"
+                  Grid.Row="2"
+                  Margin="2,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Margin="0,0,8,0"
+                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Text="选择 DevExpress 项目源文件夹 ( Win / WPF / WinUI )" />
+                <TextBlock Grid.Column="1"
+                           Text="&#xF167;"
+                           FontSize="15.6"
+                           Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Style="{StaticResource HighlightTextBlock}"
+                           FontFamily="{StaticResource Segoe}">
+                    <TextBlock.ToolTip>
+                        <ToolTip>
+                            <Image Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example1.png" />
+                        </ToolTip>
+                    </TextBlock.ToolTip>
+                </TextBlock>
+            </Grid>
+            <Grid Grid.Row="3"
+                  Height="24"
+                  Margin="4,0,0,0">
+                <!--<Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="auto" />
             </Grid.ColumnDefinitions>-->
-            <TextBox x:Name="Folder"
-                     Style="{StaticResource PlaceHolderTextBox}"
-                     IsReadOnly="True"
-                     IsReadOnlyCaretVisible="False"
-                     Cursor="Hand"
-                     Padding="2,2"
-                     Tag="双击选择文件夹"
-                     MouseDoubleClick="TextBox_MouseDoubleClick" />
-            <!--<TextBlock Grid.Column="1" 
+                <TextBox x:Name="Folder"
+                         Style="{StaticResource PlaceHolderTextBox}"
+                         IsReadOnly="True"
+                         IsReadOnlyCaretVisible="False"
+                         Cursor="Hand"
+                         Padding="2,2"
+                         Tag="双击选择文件夹"
+                         MouseDoubleClick="TextBox_MouseDoubleClick" />
+                <!--<TextBlock Grid.Column="1" 
                        Style="{StaticResource HighlightTextBlock}"
                        Margin="12,0,8,0"
                        FontSize="16"
@@ -119,74 +354,107 @@
                        PreviewMouseLeftButtonDown="TextBlock_PreviewMouseLeftButtonDown"
                        Text="&#xE895;"
                        ToolTip="检查项目"/>-->
-        </Grid>
-        <Grid Height="24"
-              Grid.Row="4"
-              Margin="2,8,0,0">
-            <TextBlock Margin="0,0,8,0"
-                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Text="设置生成的工程文件的名称 (工程文件会被放置在上面选择的目录下)" />
-        </Grid>
-        <Grid Grid.Row="5"
-              Height="24"
-              Margin="4,0,0,0">
-            <TextBox x:Name="SlnName"
-                     Style="{StaticResource PlaceHolderTextBox}"
-                     Tag="生成的工程文件的名称" />
-        </Grid>
-        <Grid Height="24"
-              Grid.Row="6"
-              Margin="2,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="auto" />
-                <ColumnDefinition Width="auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Margin="0,0,8,0"
-                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Text="检测工程的完备性" />
-            <TextBlock Grid.Column="1"
-                       Text="&#xF167;"
-                       FontSize="15.6"
-                       Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                       Style="{StaticResource HighlightTextBlock}"
-                       FontFamily="{StaticResource Segoe}">
-                <TextBlock.ToolTip>
-                    <ToolTip>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="auto" />
-                                <RowDefinition Height="auto" />
-                            </Grid.RowDefinitions>
-                            <TextBlock Margin="0,2,0,4"
-                                       Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                                       Text="检测解决方案中所有项目的程序集引用是否仅来自解决方案中的项目&#x0D;只有成功时才能顺利生成" />
-                            <Image Grid.Row="1"
-                                   Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example3.png" />
-                        </Grid>
-                    </ToolTip>
-                </TextBlock.ToolTip>
+            </Grid>
+            <Grid Height="24"
+                  Grid.Row="4"
+                  Margin="2,8,0,0">
+                <TextBlock Margin="0,0,8,0"
+                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Text="设置生成的工程文件的名称 (工程文件会被放置在上面选择的目录下)" />
+            </Grid>
+            <Grid Grid.Row="5"
+                  Height="24"
+                  Margin="4,0,0,0">
+                <TextBox x:Name="SlnName"
+                         Style="{StaticResource PlaceHolderTextBox}"
+                         Tag="生成的工程文件的名称" />
+            </Grid>
+            <Grid Height="24"
+                  Grid.Row="6"
+                  Margin="2,8,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Margin="0,0,8,0"
+                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Text="检测工程的完备性" />
+                <TextBlock Grid.Column="1"
+                           Text="&#xF167;"
+                           FontSize="15.6"
+                           Foreground="{StaticResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Style="{StaticResource HighlightTextBlock}"
+                           FontFamily="{StaticResource Segoe}">
+                    <TextBlock.ToolTip>
+                        <ToolTip>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="auto" />
+                                    <RowDefinition Height="auto" />
+                                </Grid.RowDefinitions>
+                                <TextBlock Margin="0,2,0,4"
+                                           Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                                           Text="检测解决方案中所有项目的程序集引用是否仅来自解决方案中的项目&#x0D;只有成功时才能顺利生成" />
+                                <Image Grid.Row="1"
+                                       Source="pack://application:,,,/VsSolutionGenerator;component/Resources/Example3.png" />
+                            </Grid>
+                        </ToolTip>
+                    </TextBlock.ToolTip>
             </TextBlock>
+            </Grid>
+            <Grid Grid.Row="7"
+                  Margin="4,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="CheckOutput"
+                         Style="{StaticResource PlaceHolderTextBox}"
+                         IsReadOnly="True"
+                         IsReadOnlyCaretVisible="False"
+                         Height="72" />
+                <TextBlock Grid.Column="1"
+                           Style="{StaticResource HighlightTextBlock}"
+                           Margin="12,0,8,0"
+                           FontSize="16"
+                           FontFamily="{StaticResource Segoe}"
+                           VerticalAlignment="Center"
+                           PreviewMouseLeftButtonDown="Project_Check"
+                           Text="&#xE895;"
+                           ToolTip="检查项目" />
+            </Grid>
+            <Grid x:Name="PART_ADDITION"
+                  Grid.Row="8"
+                  Margin="2,8,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto" />
+                    <RowDefinition Height="auto" MinHeight="32" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Foreground="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                           Text="添加额外的项目文件" />
+                <TreeView x:Name="PART_ADDITION_TREE"
+                          Margin="2,8,0,0"
+                          HorizontalAlignment="Stretch"
+                          Style="{StaticResource EditableTreelist}"
+                          Grid.Row="1" />
+                <TextBlock Grid.Column="1"
+                           Grid.Row="1"
+                           Margin="12,8,0,0"
+                           FontFamily="{StaticResource Segoe}"
+                           Text="&#xE710;"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"
+                           FontSize="14.5"
+                           Style="{StaticResource HighlightTextBlock}"
+                           ToolTip="添加文件夹"
+                           Foreground="Green"
+                           Width="24"
+                           MouseDown="AddProjFolder" />
+            </Grid>
         </Grid>
-        <Grid Grid.Row="7"
-              Margin="4,0,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="auto" />
-            </Grid.ColumnDefinitions>
-            <TextBox x:Name="CheckOutput"
-                     Style="{StaticResource PlaceHolderTextBox}"
-                     IsReadOnly="True"
-                     IsReadOnlyCaretVisible="False"
-                     Height="72" />
-            <TextBlock Grid.Column="1" 
-                       Style="{StaticResource HighlightTextBlock}"
-                       Margin="12,0,8,0"
-                       FontSize="16"
-                       FontFamily="{StaticResource Segoe}"
-                       VerticalAlignment="Center"
-                       PreviewMouseLeftButtonDown="Project_Check"
-                       Text="&#xE895;"
-                       ToolTip="检查项目"/>
-        </Grid>
-    </Grid>
+    </ScrollViewer>
 </Page>

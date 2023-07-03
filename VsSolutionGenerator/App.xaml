@@ -60,7 +60,7 @@
                                 <ColorAnimationUsingKeyFrames FillBehavior="HoldEnd"
                                                               Storyboard.TargetProperty="Foreground.Color">
                                     <LinearColorKeyFrame KeyTime="0:0:0.24"
-                                                         Value="#007acc" />
+                                                         Value="#FF5c5c" />
                                 </ColorAnimationUsingKeyFrames>
                             </Storyboard>
                         </BeginStoryboard>
