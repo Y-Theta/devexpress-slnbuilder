@@ -235,6 +235,17 @@
                                      HorizontalAlignment="Stretch"
                                      MouseDoubleClick="SelectItemProj"/>
                         </Grid>
+                        <HierarchicalDataTemplate.Triggers>
+                            <DataTrigger Value="True">
+                                <DataTrigger.Binding>
+                                    <Binding Path="DataContext.IsLeaf"
+                                             RelativeSource="{RelativeSource Mode=TemplatedParent}" />
+                                </DataTrigger.Binding>
+                                <Setter Property="Cursor"
+                                        TargetName="PART_NAME"
+                                        Value="Hand" />
+                            </DataTrigger>
+                        </HierarchicalDataTemplate.Triggers>
                     </HierarchicalDataTemplate>
                 </Setter.Value>
             </Setter>
@@ -454,6 +465,18 @@
                            Foreground="Green"
                            Width="24"
                            MouseDown="AddProjFolder" />
+            </Grid>
+            <Grid Grid.Row="10" >
+                <TextBox Margin="2,8"
+                         IsReadOnly="True" 
+                         Height="24"
+                         Text="生成解决方案"
+                         Foreground="#007acc"
+                         Background="Transparent"
+                         Cursor="Hand"
+                         TextAlignment="Center"
+                         Style="{StaticResource PlaceHolderTextBox}"
+                         PreviewMouseLeftButtonDown="BuildSln"/>
             </Grid>
         </Grid>
     </ScrollViewer>

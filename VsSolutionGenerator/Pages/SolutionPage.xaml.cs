@@ -16,6 +16,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using VsSolutionGenerator.DevSCR;
+using VsSolutionGenerator.SlnGenerator;
+using Path = System.IO.Path;
 using TextBox = System.Windows.Controls.TextBox;
 
 namespace VsSolutionGenerator.Pages
@@ -59,7 +61,8 @@ namespace VsSolutionGenerator.Pages
                 return;
 
             DevSolutionGenerator resolver = new DevSolutionGenerator();
-            var items = resolver.CheckSolutionNotFoundReferences(Folder.Text);
+            var addons = resolver.GenerateAddOnProjects(_folderStruct, Folder.Text);
+            var items = resolver.CheckSolutionNotFoundReferences(Folder.Text, addons);
             StringBuilder sb = new StringBuilder();
             if (items.Any())
             {
@@ -127,6 +130,39 @@ namespace VsSolutionGenerator.Pages
                     }
                 }
             }
+        }
+
+        private void BuildSln(object sender, MouseButtonEventArgs e)
+        {
+            if (string.IsNullOrEmpty(Folder.Text))
+                return;
+            if (string.IsNullOrEmpty(SlnName.Text))
+                return;
+
+            try
+            {
+                DevSolutionGenerator gen = new DevSolutionGenerator();
+                gen.OldKey = OldPubKey.Text;
+                gen.NewKey = NewPubKey.Text;
+                var addons = gen.GenerateAddOnProjects(_folderStruct, Folder.Text);
+                var sln = gen.GenerateSolution(Folder.Text, addons);
+
+                var finalFile = Path.Combine(Folder.Text, $"{SlnName.Text.Replace(".sln", "")}.sln");
+                if (File.Exists(finalFile))
+                {
+                    File.Delete(finalFile);
+                }
+                using (var slnWriter = new SlnWriter(File.Open(finalFile, FileMode.OpenOrCreate, FileAccess.ReadWrite)))
+                {
+                    slnWriter.Write(sln);
+                    slnWriter.Flush();
+                }
+            }
+            catch(Exception ex)
+            {
+
+            }
+       
         }
     }
 }

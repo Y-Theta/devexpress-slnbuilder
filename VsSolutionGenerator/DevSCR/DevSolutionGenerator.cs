@@ -38,13 +38,12 @@ namespace VsSolutionGenerator.DevSCR
         public string OldKey { get; set; }
         public string NewKey { get; set; }
 
-        public static readonly DevSolutionGenerator Singleton = new DevSolutionGenerator();
-
         public Sln GenerateSolution(string folder,
             Dictionary<string, List<string>> addonPorjects = null,
             Dictionary<string, List<(string key, Stream value)>> inMemoryFile = null)
         {
             Sln sln = new Sln();
+            OverridePublicKey(folder, OldKey, NewKey);
             sln.Header = VsHeaderInfoTable.VS_2022_Enterprise_17_6;
             Dictionary<ProjectItemSection, List<ProjectItemSection>> treeStruct = new Dictionary<ProjectItemSection, List<ProjectItemSection>>();
             GenerateProjectSection(folder, sln, treeStruct, addonPorjects, inMemoryFile);
@@ -159,7 +158,8 @@ namespace VsSolutionGenerator.DevSCR
             }
         }
 
-        public ISet<string> CheckSolutionNotFoundReferences(string folder)
+        public ISet<string> CheckSolutionNotFoundReferences(string folder, 
+            Dictionary<string, List<string>> addonPorjects = null)
         {
             Sln sln = new Sln();
             Dictionary<string, List<string>> projRefs = new Dictionary<string, List<string>>();
@@ -184,6 +184,41 @@ namespace VsSolutionGenerator.DevSCR
                     projRefs[item.Guid.ToString("B")] = kv.refs;
                 }
                 sln.AddProject(item);
+            }
+
+            if (addonPorjects != null)
+            {
+                foreach (var proj in addonPorjects)
+                {
+                    if (proj.Value != null && proj.Value.Count > 0)
+                    {
+                        foreach (var item in proj.Value)
+                        {
+                            var projPath = Path.Combine(folder, item);
+                            if (!File.Exists(projPath))
+                            {
+                                continue;
+                            }
+                            ProjectItemSection project = new ProjectItemSection();
+                            FileInfo info = new FileInfo(projPath);
+                            var kv = MatchDllReference(File.ReadAllText(projPath));
+                            if (kv.guid != null)
+                            {
+                                project.SetGuid(new Guid(kv.guid));
+                            }
+                            project.Name = info.Name.Replace(info.Extension, "");
+                            project.DType = ConstTable.PROJ_TYPE_C_SHARP;
+                            project.Path = item;
+                            project.OutputName = project.Name;
+                            if (!string.IsNullOrEmpty(kv.asbName))
+                            {
+                                project.OutputName = kv.asbName;
+                            }
+                            projRefs[project.Guid.ToString("B")] = kv.refs;
+                            sln.AddProject(project);
+                        }
+                    }
+                }
             }
 
             foreach (var proj in sln.Projects)
@@ -335,6 +370,42 @@ namespace VsSolutionGenerator.DevSCR
             return (projReference, guid, assemblyName);
         }
 
+        internal Dictionary<string, List<string>> GenerateAddOnProjects(IEnumerable<FolderItem> roots, string rootPath)
+        {
+            Dictionary<string, List<string>> addons = null;
+            if (roots.Count() > 0)
+            {
+                addons = new Dictionary<string, List<string>>();
+                foreach (var entry in roots)
+                {
+                    if (entry.SubEntries.Count > 0)
+                    {
+                        var name = entry.Name ?? string.Empty;
+                        List<string> values = null;
+                        if (!addons.ContainsKey(name))
+                        {
+                            addons[entry.Name] = new List<string>();
+                        }
+                        values = addons[entry.Name];
+
+                        foreach (var path in entry.SubEntries)
+                        {
+                            if (string.IsNullOrEmpty(path.Path))
+                            {
+                                continue;
+                            }
+
+                            Uri abs = new Uri(path.Path);
+                            Uri root = new Uri($"{rootPath}\\");
+                            var rel = root.MakeRelativeUri(abs);
+                            var relative = Uri.UnescapeDataString(rel.ToString().Replace('/', System.IO.Path.DirectorySeparatorChar));
+                            values.Add(relative);
+                        }
+                    }
+                }
+            }
+            return addons;
+        }
 
         public void OverridePublicKey(string dir)
         {
@@ -346,6 +417,9 @@ namespace VsSolutionGenerator.DevSCR
         /// </summary>
         public void OverridePublicKey(string dir, string key, string newkey)
         {
+            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(newkey))
+                return;
+
             var files = Directory.GetFiles(dir, "AssemblyInfo.cs", SearchOption.AllDirectories);
             files.AsParallel().ForAll(entry =>
             {
